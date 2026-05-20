@@ -1,7 +1,14 @@
+def escape_markdown(text: str | None) -> str:
+    """Escapes Markdown V1 special characters (*, _, `, [) to prevent Telegram parsing errors"""
+    if not text:
+        return ""
+    return text.replace("_", "\\_").replace("*", "\\*").replace("`", "\\`").replace("[", "\\[")
+
 def get_start_message(display_name: str) -> str:
     """Atmospheric registration message in dark academia style"""
+    escaped_name = escape_markdown(display_name)
     return (
-        f"🏛️ *Вітаємо у Братстві Уваги, {display_name}!*\n\n"
+        f"🏛️ *Вітаємо у Братстві Уваги, {escaped_name}!*\n\n"
         "Ти став частиною спільноти, яка вирішила кинути виклик найвитонченішому викрадачу людського часу — безкінечному скролінгу.\n\n"
         "🕯️ *Наша філософія:*\n"
         "Алгоритми TikTok, Instagram Reels та YouTube Shorts створені для того, щоб висмоктувати твою увагу та перетворювати твій час на прибуток корпорацій. Тут ми повертаємо собі контроль над своїм розумом.\n\n"
@@ -45,13 +52,15 @@ def get_help_message() -> str:
 
 def get_stats_message(stats: dict) -> str:
     """Formatted personal user statistics"""
-    badges_str = "\n".join([f"• {b}" for b in stats["badges"]]) if stats["badges"] else "_Немає розблокованих ачивок_"
-    username_part = f" (@{stats['username']})" if stats['username'] else ""
+    badges_str = "\n".join([f"• {escape_markdown(b)}" for b in stats["badges"]]) if stats["badges"] else "_Немає розблокованих ачивок_"
+    username_part = f" (@{escape_markdown(stats['username'])})" if stats['username'] else ""
+    escaped_name = escape_markdown(stats['display_name'])
+    escaped_lvl_title = escape_markdown(stats['level_title'])
     
     return (
-        f"📊 *Дофамінова статистика | {stats['display_name']}*{username_part}\n"
+        f"📊 *Дофамінова статистика | {escaped_name}*{username_part}\n"
         "━━━━━━━━━━━━━━━━━━━━━━━━━\n"
-        f"🎖️ *Ранг:* `{stats['level_title']}` (Рівень `{stats['level']}`)\n"
+        f"🎖️ *Ранг:* `{escaped_lvl_title}` (Рівень `{stats['level']}`)\n"
         f"⚡ *Досвід:* `{stats['xp']} XP`\n\n"
         f"🔥 *Поточний стрік:* `{stats['current_streak']} днів`\n"
         f"🏆 *Найкращий стрік:* `{stats['best_streak']} днів`\n"
@@ -91,8 +100,9 @@ def get_leaderboard_message(users: list, sort_by: str) -> str:
         else:
             detail = f"`{u.best_streak} дн` (пот: `{u.current_streak}`)"
             
-        username_part = f" (@{u.username})" if u.username else ""
-        rows.append(f"{medal} *{u.display_name}*{username_part}\n    └ {detail}")
+        username_part = f" (@{escape_markdown(u.username)})" if u.username else ""
+        escaped_name = escape_markdown(u.display_name)
+        rows.append(f"{medal} *{escaped_name}*{username_part}\n    └ {detail}")
         
     if not rows:
         return header + "_У залі слави поки порожньо. Почни свій стрік зараз!_"
@@ -111,22 +121,28 @@ def get_daily_checkin_message() -> str:
 
 def get_achievement_unlock_message(display_name: str, badge_title: str, description: str, xp_bonus: int) -> str:
     """Notification when an achievement is unlocked"""
+    escaped_name = escape_markdown(display_name)
+    escaped_badge = escape_markdown(badge_title)
+    escaped_desc = escape_markdown(description)
     return (
         f"🏅 *НОВЕ ДОСЯГНЕННЯ РОЗБЛОКОВАНО!*\n"
-        f"👤 *Учасник:* *{display_name}*\n"
-        f"🏆 *Назва:* *{badge_title}*\n"
-        f"📜 *Опис:* _{description}_\n"
+        f"👤 *Учасник:* *{escaped_name}*\n"
+        f"🏆 *Назва:* *{escaped_badge}*\n"
+        f"📜 *Опис:* _{escaped_desc}_\n"
         f"⚡ *Бонус:* `+{xp_bonus} XP`"
     )
 
 def get_level_up_message(display_name: str, level: int, title: str, description: str) -> str:
     """Notification when a user gains a new level"""
+    escaped_name = escape_markdown(display_name)
+    escaped_title = escape_markdown(title)
+    escaped_desc = escape_markdown(description)
     return (
         f"⚡ *НОВИЙ РІВЕНЬ ДОСЯГНУТО!* ⚡\n"
         f"━━━━━━━━━━━━━━━━━━━━━━━━━\n"
-        f"👤 *Учасник:* *{display_name}*\n"
-        f"🎖️ *Новий ранг:* *{title}* (Рівень `{level}`)\n"
-        f"📜 *Стан розуму:* _{description}_\n\n"
+        f"👤 *Учасник:* *{escaped_name}*\n"
+        f"🎖️ *Новий ранг:* *{escaped_title}* (Рівень `{level}`)\n"
+        f"📜 *Стан розуму:* _{escaped_desc}_\n\n"
         f"🎁 *Нагорода за розвиток фокусу:* `+1 Заморозка стріку (❄️)`\n"
         f"━━━━━━━━━━━━━━━━━━━━━━━━━\n"
         f"Вітаємо! Твоя стійкість дає плоди."
